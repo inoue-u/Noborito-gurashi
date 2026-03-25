@@ -1,0 +1,167 @@
+/* ペンギンテーマ カラーパレット */
+:root {
+  --penguin-black: #1a1a2e;
+  --penguin-dark: #16213e;
+  --penguin-navy: #0f3460;
+  --penguin-belly: #f0f4f8;
+  --penguin-white: #ffffff;
+  --penguin-teal: #00b4d8;
+  --penguin-teal-light: #90e0ef;
+  --penguin-teal-dark: #0077b6;
+  --penguin-beak: #f7a800;
+  --penguin-beak-dark: #e07b00;
+  --penguin-ice: #caf0f8;
+  --penguin-snow: #e8f4f8;
+  --penguin-accent: #ff6b6b;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.25);
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --font-main: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background: linear-gradient(135deg, var(--penguin-black) 0%, var(--penguin-dark) 50%, var(--penguin-navy) 100%);
+  min-height: 100vh;
+  color: var(--penguin-white);
+  overflow-x: hidden;
+}
+
+/* 雪のアニメーション背景 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px, 30px 30px;
+  background-position: 0 0, 15px 15px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* カードスタイル */
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ボタンスタイル */
+.btn-primary {
+  background: linear-gradient(135deg, var(--penguin-teal), var(--penguin-teal-dark));
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--penguin-teal-dark), var(--penguin-navy));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 180, 216, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-danger {
+  background: rgba(255, 107, 107, 0.2);
+  color: var(--penguin-accent);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 107, 107, 0.35);
+  transform: scale(1.05);
+}
+
+/* インプットスタイル */
+.input-field {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: white;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+
+.input-field::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.input-field:focus {
+  border-color: var(--penguin-teal);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* セクションタイトル */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--penguin-teal-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* スクロールバー */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--penguin-teal);
+  border-radius: 3px;
+}

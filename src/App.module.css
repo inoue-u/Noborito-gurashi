@@ -1,0 +1,177 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== ヘッダー ===== */
+.header {
+  background: rgba(10, 10, 30, 0.7);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 180, 216, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerInner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.penguinLogo {
+  font-size: 2.2rem;
+  filter: drop-shadow(0 2px 8px rgba(0,180,216,0.5));
+  animation: floatPenguin 3s ease-in-out infinite;
+}
+
+@keyframes floatPenguin {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.appTitle {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.05em;
+}
+
+.appSubtitle {
+  font-size: 0.75rem;
+  color: var(--penguin-teal-light);
+  opacity: 0.8;
+}
+
+.headerDecor {
+  display: flex;
+  gap: 6px;
+  font-size: 1.2rem;
+  opacity: 0.4;
+}
+
+/* ===== デスクトップレイアウト ===== */
+.desktopLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 20px 100px;
+  width: 100%;
+  flex: 1;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== モバイルレイアウト ===== */
+.mobileLayout {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+
+.mobileContent {
+  flex: 1;
+  padding: 16px 14px 80px;
+  overflow-y: auto;
+}
+
+.tabBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10, 10, 30, 0.92);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(0, 180, 216, 0.2);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  z-index: 200;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: rgba(255,255,255,0.4);
+}
+
+.tabBtn:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+.tabBtn.tabActive {
+  color: var(--penguin-teal);
+}
+
+.tabBtn.tabActive .tabIcon {
+  transform: scale(1.2);
+}
+
+.tabIcon {
+  font-size: 1.4rem;
+  transition: transform 0.2s;
+}
+
+.tabLabel {
+  font-size: 0.65rem;
+  font-family: var(--font-main);
+  font-weight: 700;
+}
+
+/* ===== フッター ===== */
+.footer {
+  background: rgba(10, 10, 30, 0.6);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.25);
+  flex-wrap: wrap;
+}
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 768px) {
+  .desktopLayout {
+    display: none;
+  }
+
+  .mobileLayout {
+    display: flex;
+  }
+
+  .footer {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobileLayout {
+    display: none;
+  }
+}
