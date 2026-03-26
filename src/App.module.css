@@ -1,23 +1,29 @@
 .app {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
 /* ===== ヘッダー ===== */
 .header {
-  background: rgba(10, 10, 30, 0.7);
+  background: rgba(10, 10, 30, 0.85);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 180, 216, 0.2);
   position: sticky;
   top: 0;
   z-index: 100;
+  /* Dynamic Island / ノッチ対応 */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .headerInner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 14px 20px;
+  padding: 12px 20px;
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -30,7 +36,7 @@
 }
 
 .penguinLogo {
-  font-size: 2.2rem;
+  font-size: 2rem;
   filter: drop-shadow(0 2px 8px rgba(0,180,216,0.5));
   animation: floatPenguin 3s ease-in-out infinite;
 }
@@ -41,14 +47,14 @@
 }
 
 .appTitle {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: white;
   letter-spacing: 0.05em;
 }
 
 .appSubtitle {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--penguin-teal-light);
   opacity: 0.8;
 }
@@ -56,8 +62,8 @@
 .headerDecor {
   display: flex;
   gap: 6px;
-  font-size: 1.2rem;
-  opacity: 0.4;
+  font-size: 1.1rem;
+  opacity: 0.35;
 }
 
 /* ===== デスクトップレイアウト ===== */
@@ -83,26 +89,40 @@
   display: none;
   flex-direction: column;
   flex: 1;
+  /* iOS: 全高を使う */
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .mobileContent {
   flex: 1;
-  padding: 16px 14px 80px;
   overflow-y: auto;
+  overflow-x: hidden;
+  /* iOSのスムーズスクロール */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 14px 14px 0;
+  /* タブバー + ホームインジケーター分の余白 */
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px) + 8px);
 }
 
+/* ===== タブバー (iOS向け) ===== */
 .tabBar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(10, 10, 30, 0.92);
-  backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(0, 180, 216, 0.2);
+  background: rgba(10, 10, 30, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 180, 216, 0.18);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+  /* ホームインジケーター対応 */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 200;
+  /* タブバーの高さ: コンテンツ部分 */
+  padding-top: 8px;
 }
 
 .tabBtn {
@@ -112,14 +132,25 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 8px 4px;
+  /* iOS: 最小タップ領域 44x44pt */
+  min-height: 52px;
+  padding: 6px 4px 8px;
   cursor: pointer;
   transition: all 0.15s;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.38);
+  /* タップ操作を改善 */
+  -webkit-appearance: none;
+  position: relative;
 }
 
-.tabBtn:hover {
-  color: rgba(255,255,255,0.7);
+.tabBtn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.tabBtn:active {
+  opacity: 0.7;
 }
 
 .tabBtn.tabActive {
@@ -127,25 +158,41 @@
 }
 
 .tabBtn.tabActive .tabIcon {
-  transform: scale(1.2);
+  transform: scale(1.18) translateY(-1px);
+}
+
+/* アクティブインジケーター */
+.tabBtn.tabActive::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: var(--penguin-teal);
+  border-radius: 0 0 3px 3px;
 }
 
 .tabIcon {
-  font-size: 1.4rem;
-  transition: transform 0.2s;
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tabLabel {
   font-size: 0.65rem;
   font-family: var(--font-main);
   font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-/* ===== フッター ===== */
+/* ===== フッター (デスクトップのみ) ===== */
 .footer {
   background: rgba(10, 10, 30, 0.6);
   border-top: 1px solid rgba(255,255,255,0.06);
   padding: 12px 20px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
   align-items: center;

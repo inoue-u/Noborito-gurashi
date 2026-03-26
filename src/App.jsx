@@ -3,7 +3,9 @@ import Weather from './components/Weather'
 import GarbageCalendar from './components/GarbageCalendar'
 import ShoppingList from './components/ShoppingList'
 import Memo from './components/Memo'
+import HouseholdSetup from './components/HouseholdSetup'
 import styles from './App.module.css'
+import { useHousehold } from './hooks/useHousehold'
 
 const TABS = [
   { id: 'weather', label: '天気', icon: '☀️' },
@@ -14,6 +16,21 @@ const TABS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('weather')
+  const { householdId, createHousehold, joinHousehold, leaveHousehold } = useHousehold()
+
+  if (!householdId) {
+    return (
+      <HouseholdSetup
+        onCreate={createHousehold}
+        onJoin={joinHousehold}
+      />
+    )
+  }
+
+  const sharedProps = {
+    householdId,
+    onLeaveHousehold: leaveHousehold,
+  }
 
   return (
     <div className={styles.app}>
@@ -42,8 +59,8 @@ export default function App() {
           <GarbageCalendar />
         </div>
         <div className={styles.column}>
-          <ShoppingList />
-          <Memo />
+          <ShoppingList {...sharedProps} />
+          <Memo {...sharedProps} />
         </div>
       </main>
 
@@ -52,8 +69,8 @@ export default function App() {
         <div className={styles.mobileContent}>
           {activeTab === 'weather' && <Weather />}
           {activeTab === 'garbage' && <GarbageCalendar />}
-          {activeTab === 'shopping' && <ShoppingList />}
-          {activeTab === 'memo' && <Memo />}
+          {activeTab === 'shopping' && <ShoppingList {...sharedProps} />}
+          {activeTab === 'memo' && <Memo {...sharedProps} />}
         </div>
         <nav className={styles.tabBar}>
           {TABS.map(tab => (
@@ -69,7 +86,7 @@ export default function App() {
         </nav>
       </main>
 
-      {/* フッター */}
+      {/* フッター (デスクトップのみ) */}
       <footer className={styles.footer}>
         <span>🐧 登戸暮らし</span>
         <span>·</span>

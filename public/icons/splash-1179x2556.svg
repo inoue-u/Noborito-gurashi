@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1179" height="2556" viewBox="0 0 1179 2556">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="50%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </linearGradient>
+  </defs>
+  <rect width="1179" height="2556" fill="url(#bg)"/>
+  <!-- ペンギン大 -->
+  <text x="590" y="1200" font-size="300" text-anchor="middle" dominant-baseline="middle">🐧</text>
+  <text x="590" y="1420" font-size="80" font-family="sans-serif" font-weight="bold" fill="white" text-anchor="middle">登戸暮らし</text>
+  <text x="590" y="1510" font-size="40" font-family="sans-serif" fill="#90e0ef" text-anchor="middle" opacity="0.8">川崎市多摩区 登戸</text>
+</svg>

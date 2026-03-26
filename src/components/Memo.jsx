@@ -1,100 +1,69 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import styles from './Memo.module.css'
-
-const STORAGE_KEY = 'noborito-memos'
+import { useSharedMemos } from '../hooks/useSharedMemos'
+import HouseholdBadge from './HouseholdBadge'
 
 const NOTE_COLORS = [
-  { id: 'teal', bg: 'rgba(0,180,216,0.15)', border: 'rgba(0,180,216,0.3)', label: '青' },
-  { id: 'yellow', bg: 'rgba(247,168,0,0.15)', border: 'rgba(247,168,0,0.3)', label: '黄' },
-  { id: 'green', bg: 'rgba(78,205,100,0.15)', border: 'rgba(78,205,100,0.3)', label: '緑' },
-  { id: 'pink', bg: 'rgba(255,107,107,0.15)', border: 'rgba(255,107,107,0.3)', label: 'ピンク' },
-  { id: 'purple', bg: 'rgba(157,78,221,0.15)', border: 'rgba(157,78,221,0.3)', label: '紫' },
+  { id: 'teal', bg: 'rgba(0,180,216,0.15)', border: 'rgba(0,180,216,0.3)' },
+  { id: 'yellow', bg: 'rgba(247,168,0,0.15)', border: 'rgba(247,168,0,0.3)' },
+  { id: 'green', bg: 'rgba(78,205,100,0.15)', border: 'rgba(78,205,100,0.3)' },
+  { id: 'pink', bg: 'rgba(255,107,107,0.15)', border: 'rgba(255,107,107,0.3)' },
+  { id: 'purple', bg: 'rgba(157,78,221,0.15)', border: 'rgba(157,78,221,0.3)' },
 ]
 
-function loadMemos() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveMemos(memos) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(memos))
-}
-
-function formatDate(isoStr) {
-  const d = new Date(isoStr)
+function formatDate(val) {
+  if (!val) return ''
+  const d = val.toDate ? val.toDate() : new Date(val)
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-export default function Memo() {
-  const [memos, setMemos] = useState(loadMemos)
-  const [editingId, setEditingId] = useState(null)
-  const [newTitle, setNewTitle] = useState('')
-  const [newBody, setNewBody] = useState('')
-  const [newColor, setNewColor] = useState('teal')
+export default function Memo({ householdId, onLeaveHousehold }) {
+  const { memos, syncing, saveMemo, deleteMemo } = useSharedMemos(householdId)
+  const [editingMemo, setEditingMemo] = useState(null) // null | memo object
   const [isCreating, setIsCreating] = useState(false)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftBody, setDraftBody] = useState('')
+  const [draftColor, setDraftColor] = useState('teal')
   const [searchQuery, setSearchQuery] = useState('')
-
-  useEffect(() => { saveMemos(memos) }, [memos])
 
   function startCreate() {
     setIsCreating(true)
-    setNewTitle('')
-    setNewBody('')
-    setNewColor('teal')
-    setEditingId(null)
-  }
-
-  function saveNew() {
-    const title = newTitle.trim()
-    const body = newBody.trim()
-    if (!title && !body) { setIsCreating(false); return }
-    const memo = {
-      id: Date.now(),
-      title: title || '無題のメモ',
-      body,
-      color: newColor,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    setMemos(prev => [memo, ...prev])
-    setIsCreating(false)
+    setEditingMemo(null)
+    setDraftTitle('')
+    setDraftBody('')
+    setDraftColor('teal')
   }
 
   function startEdit(memo) {
-    setEditingId(memo.id)
-    setNewTitle(memo.title)
-    setNewBody(memo.body)
-    setNewColor(memo.color)
+    setEditingMemo(memo)
     setIsCreating(false)
+    setDraftTitle(memo.title)
+    setDraftBody(memo.body)
+    setDraftColor(memo.color)
   }
 
-  function saveEdit() {
-    setMemos(prev => prev.map(m =>
-      m.id === editingId
-        ? { ...m, title: newTitle.trim() || '無題のメモ', body: newBody.trim(), color: newColor, updatedAt: new Date().toISOString() }
-        : m
-    ))
-    setEditingId(null)
+  async function handleSave() {
+    const title = draftTitle.trim()
+    const body = draftBody.trim()
+    if (!title && !body) { cancel(); return }
+    await saveMemo({
+      id: editingMemo?.id ?? null,
+      title: title || '無題のメモ',
+      body,
+      color: draftColor,
+    })
+    cancel()
   }
 
-  function deleteMemo(id) {
-    setMemos(prev => prev.filter(m => m.id !== id))
-    if (editingId === id) setEditingId(null)
-  }
-
-  function cancelEdit() {
-    setEditingId(null)
+  function cancel() {
     setIsCreating(false)
+    setEditingMemo(null)
   }
 
   const filtered = memos.filter(m => {
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
-    return m.title.toLowerCase().includes(q) || m.body.toLowerCase().includes(q)
+    return m.title?.toLowerCase().includes(q) || m.body?.toLowerCase().includes(q)
   })
 
   const getColorStyle = (colorId) => {
@@ -102,21 +71,26 @@ export default function Memo() {
     return { background: c.bg, borderColor: c.border }
   }
 
+  const showForm = isCreating || editingMemo !== null
+
   return (
     <div className={`card ${styles.memoCard}`}>
       <div className={styles.headerRow}>
         <div className="section-title" style={{ marginBottom: 0 }}>
           📝 メモ
+          {syncing && <span className={styles.syncDot}>●</span>}
         </div>
-        {!isCreating && !editingId && (
+        {!showForm && (
           <button className={`btn-primary ${styles.newBtn}`} onClick={startCreate}>
             ＋ 新規
           </button>
         )}
       </div>
 
+      <HouseholdBadge householdId={householdId} onLeave={onLeaveHousehold} />
+
       {/* 検索 */}
-      {memos.length > 2 && !isCreating && !editingId && (
+      {memos.length > 2 && !showForm && (
         <input
           className={`input-field ${styles.searchInput}`}
           type="text"
@@ -127,49 +101,42 @@ export default function Memo() {
       )}
 
       {/* 作成/編集フォーム */}
-      {(isCreating || editingId !== null) && (
-        <div className={`${styles.editForm}`} style={getColorStyle(newColor)}>
-          {/* カラー選択 */}
+      {showForm && (
+        <div className={styles.editForm} style={getColorStyle(draftColor)}>
           <div className={styles.colorPicker}>
             {NOTE_COLORS.map(c => (
               <button
                 key={c.id}
-                className={`${styles.colorBtn} ${newColor === c.id ? styles.colorBtnActive : ''}`}
+                className={`${styles.colorBtn} ${draftColor === c.id ? styles.colorBtnActive : ''}`}
                 style={{ background: c.border }}
-                onClick={() => setNewColor(c.id)}
-                title={c.label}
+                onClick={() => setDraftColor(c.id)}
               />
             ))}
           </div>
-
           <input
             className={`input-field ${styles.titleInput}`}
             type="text"
             placeholder="タイトル"
-            value={newTitle}
-            onChange={e => setNewTitle(e.target.value)}
+            value={draftTitle}
+            onChange={e => setDraftTitle(e.target.value)}
             autoFocus
           />
           <textarea
             className={`input-field ${styles.bodyInput}`}
             placeholder="メモの内容…"
-            value={newBody}
-            onChange={e => setNewBody(e.target.value)}
+            value={draftBody}
+            onChange={e => setDraftBody(e.target.value)}
             rows={5}
           />
           <div className={styles.editActions}>
-            <button className="btn-danger" onClick={cancelEdit}>
-              キャンセル
-            </button>
-            <button className="btn-primary" onClick={isCreating ? saveNew : saveEdit}>
-              保存
-            </button>
+            <button className="btn-danger" onClick={cancel}>キャンセル</button>
+            <button className="btn-primary" onClick={handleSave}>保存</button>
           </div>
         </div>
       )}
 
       {/* メモ一覧 */}
-      {!isCreating && editingId === null && (
+      {!showForm && (
         <>
           {filtered.length === 0 && memos.length === 0 && (
             <div className={styles.empty}>
@@ -193,28 +160,14 @@ export default function Memo() {
                 <div className={styles.noteHeader}>
                   <div className={styles.noteTitle}>{memo.title}</div>
                   <div className={styles.noteActions}>
-                    <button
-                      className={styles.editBtn}
-                      onClick={() => startEdit(memo)}
-                      title="編集"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className={styles.deleteBtn}
-                      onClick={() => deleteMemo(memo.id)}
-                      title="削除"
-                    >
-                      🗑️
-                    </button>
+                    <button className={styles.editBtn} onClick={() => startEdit(memo)}>✏️</button>
+                    <button className={styles.deleteBtn} onClick={() => deleteMemo(memo.id)}>🗑️</button>
                   </div>
                 </div>
                 {memo.body && (
                   <div className={styles.noteBody}>{memo.body}</div>
                 )}
-                <div className={styles.noteDate}>
-                  {formatDate(memo.updatedAt)}
-                </div>
+                <div className={styles.noteDate}>{formatDate(memo.updatedAt)}</div>
               </div>
             ))}
           </div>

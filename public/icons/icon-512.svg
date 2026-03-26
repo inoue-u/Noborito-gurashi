@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </radialGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="102.4" fill="url(#bg)"/>
+  <!-- 雪の点 -->
+  <circle cx="76.8" cy="76.8" r="7.68" fill="white" opacity="0.3"/>
+  <circle cx="435.2" cy="102.4" r="5.12" fill="white" opacity="0.2"/>
+  <circle cx="51.2" cy="409.6" r="6.144" fill="white" opacity="0.2"/>
+  <!-- ペンギンの体（黒） -->
+  <ellipse cx="256" cy="296.96" rx="143.36" ry="174.08" fill="#1a1a2e"/>
+  <!-- ペンギンのお腹（白） -->
+  <ellipse cx="256" cy="317.44" rx="87.04" ry="122.88" fill="#f0f4f8"/>
+  <!-- ペンギンの頭 -->
+  <ellipse cx="256" cy="143.36" rx="102.4" ry="97.28" fill="#1a1a2e"/>
+  <!-- 目（白） -->
+  <ellipse cx="220.16" cy="128" rx="25.6" ry="28.16" fill="white"/>
+  <ellipse cx="291.84" cy="128" rx="25.6" ry="28.16" fill="white"/>
+  <!-- 瞳 -->
+  <circle cx="225.28" cy="130.56" r="14.336" fill="#0f3460"/>
+  <circle cx="296.96" cy="130.56" r="14.336" fill="#0f3460"/>
+  <!-- ハイライト -->
+  <circle cx="232.96" cy="122.88" r="5.12" fill="white"/>
+  <circle cx="304.64" cy="122.88" r="5.12" fill="white"/>
+  <!-- くちばし -->
+  <ellipse cx="256" cy="171.52" rx="28.16" ry="16.384" fill="#f7a800"/>
+  <!-- 羽 -->
+  <ellipse cx="130.56" cy="307.2" rx="35.84" ry="102.4" fill="#141428" transform="rotate(-15,130.56,307.2)"/>
+  <ellipse cx="381.44" cy="307.2" rx="35.84" ry="102.4" fill="#141428" transform="rotate(15,381.44,307.2)"/>
+  <!-- 足 -->
+  <ellipse cx="220.16" cy="460.8" rx="40.96" ry="17.92" fill="#f7a800"/>
+  <ellipse cx="291.84" cy="460.8" rx="40.96" ry="17.92" fill="#f7a800"/>
+  <!-- ティールのアクセント（目の周り） -->
+  <circle cx="256" cy="256" r="245.76" fill="none" stroke="#00b4d8" stroke-width="7.68" opacity="0.3"/>
+</svg>

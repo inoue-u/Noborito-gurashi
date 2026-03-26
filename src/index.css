@@ -21,20 +21,47 @@
   --radius-lg: 24px;
   --radius-xl: 32px;
   --font-main: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+
+  /* iOS セーフエリア (iPhone 14 Pro Dynamic Island対応) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
+/* iOS タップハイライト無効化 */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* テキスト選択は入力フィールドのみ許可 */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+html {
+  /* iOSのバウンススクロールを防止 */
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 body {
   font-family: var(--font-main);
   background: linear-gradient(135deg, var(--penguin-black) 0%, var(--penguin-dark) 50%, var(--penguin-navy) 100%);
+  /* iPhone 14 Pro: Dynamic Island含む全画面 */
   min-height: 100vh;
+  min-height: 100dvh;
   color: var(--penguin-white);
   overflow-x: hidden;
+  /* iOSスクロールをスムーズに */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 /* 雪のアニメーション背景 */
@@ -57,22 +84,29 @@ body::before {
 #root {
   position: relative;
   z-index: 1;
+  height: 100%;
+  min-height: 100dvh;
 }
 
 /* カードスタイル */
 .card {
   background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   padding: 20px;
   box-shadow: var(--shadow-md);
+  /* iOS: カードのタップ時アニメーション */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+/* デスクトップのみhoverエフェクト */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
 }
 
 /* ボタンスタイル */
@@ -81,23 +115,30 @@ body::before {
   color: white;
   border: none;
   border-radius: var(--radius-sm);
+  /* iOS: 最小タップサイズ44x44pt */
+  min-height: 44px;
   padding: 10px 20px;
   font-family: var(--font-main);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, var(--penguin-teal-dark), var(--penguin-navy));
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0, 180, 216, 0.4);
+  /* iOSボタンのデフォルトスタイルをリセット */
+  -webkit-appearance: none;
 }
 
 .btn-primary:active {
-  transform: translateY(0);
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--penguin-teal-dark), var(--penguin-navy));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 180, 216, 0.4);
+  }
 }
 
 .btn-danger {
@@ -105,16 +146,18 @@ body::before {
   color: var(--penguin-accent);
   border: 1px solid rgba(255, 107, 107, 0.3);
   border-radius: var(--radius-sm);
+  min-height: 44px;
   padding: 6px 12px;
   font-family: var(--font-main);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  -webkit-appearance: none;
 }
 
-.btn-danger:hover {
+.btn-danger:active {
   background: rgba(255, 107, 107, 0.35);
-  transform: scale(1.05);
+  transform: scale(0.97);
 }
 
 /* インプットスタイル */
@@ -122,13 +165,19 @@ body::before {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-sm);
+  /* iOS: 最小タップ高さ */
+  min-height: 44px;
   padding: 10px 14px;
   color: white;
   font-family: var(--font-main);
-  font-size: 0.95rem;
+  /* iOS: 16px未満だとzoomする */
+  font-size: 16px;
   outline: none;
   transition: border-color 0.2s, background 0.2s;
   width: 100%;
+  /* iOS inputのデフォルトスタイルをリセット */
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .input-field::placeholder {
@@ -153,15 +202,15 @@ body::before {
 
 /* スクロールバー */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
   background: rgba(255,255,255,0.05);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--penguin-teal);
-  border-radius: 3px;
+  border-radius: 2px;
 }

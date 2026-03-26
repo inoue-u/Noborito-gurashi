@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="152" height="152" viewBox="0 0 152 152">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#16213e"/>
+      <stop offset="100%" stop-color="#0f3460"/>
+    </radialGradient>
+  </defs>
+  <!-- 背景 -->
+  <rect width="152" height="152" rx="30.400000000000002" fill="url(#bg)"/>
+  <!-- 雪の点 -->
+  <circle cx="22.8" cy="22.8" r="2.28" fill="white" opacity="0.3"/>
+  <circle cx="129.2" cy="30.400000000000002" r="1.52" fill="white" opacity="0.2"/>
+  <circle cx="15.200000000000001" cy="121.60000000000001" r="1.824" fill="white" opacity="0.2"/>
+  <!-- ペンギンの体（黒） -->
+  <ellipse cx="76" cy="88.16" rx="42.56" ry="51.68000000000001" fill="#1a1a2e"/>
+  <!-- ペンギンのお腹（白） -->
+  <ellipse cx="76" cy="94.24" rx="25.840000000000003" ry="36.48" fill="#f0f4f8"/>
+  <!-- ペンギンの頭 -->
+  <ellipse cx="76" cy="42.56" rx="30.400000000000002" ry="28.88" fill="#1a1a2e"/>
+  <!-- 目（白） -->
+  <ellipse cx="65.36" cy="38" rx="7.6000000000000005" ry="8.36" fill="white"/>
+  <ellipse cx="86.63999999999999" cy="38" rx="7.6000000000000005" ry="8.36" fill="white"/>
+  <!-- 瞳 -->
+  <circle cx="66.88" cy="38.76" r="4.256" fill="#0f3460"/>
+  <circle cx="88.16" cy="38.76" r="4.256" fill="#0f3460"/>
+  <!-- ハイライト -->
+  <circle cx="69.16" cy="36.48" r="1.52" fill="white"/>
+  <circle cx="90.44" cy="36.48" r="1.52" fill="white"/>
+  <!-- くちばし -->
+  <ellipse cx="76" cy="50.92" rx="8.36" ry="4.864" fill="#f7a800"/>
+  <!-- 羽 -->
+  <ellipse cx="38.76" cy="91.2" rx="10.64" ry="30.400000000000002" fill="#141428" transform="rotate(-15,38.76,91.2)"/>
+  <ellipse cx="113.24" cy="91.2" rx="10.64" ry="30.400000000000002" fill="#141428" transform="rotate(15,113.24,91.2)"/>
+  <!-- 足 -->
+  <ellipse cx="65.36" cy="136.8" rx="12.16" ry="5.32" fill="#f7a800"/>
+  <ellipse cx="86.63999999999999" cy="136.8" rx="12.16" ry="5.32" fill="#f7a800"/>
+  <!-- ティールのアクセント（目の周り） -->
+  <circle cx="76" cy="76" r="72.96" fill="none" stroke="#00b4d8" stroke-width="2.28" opacity="0.3"/>
+</svg>

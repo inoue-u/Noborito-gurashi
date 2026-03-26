@@ -250,6 +250,37 @@
   text-overflow: ellipsis;
 }
 
+.officialLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.officialBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,180,216,0.08);
+  border: 1px solid rgba(0,180,216,0.2);
+  border-radius: 10px;
+  color: var(--penguin-teal-light);
+  padding: 10px 14px;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  min-height: 44px;
+  transition: background 0.15s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.officialBtn:active {
+  background: rgba(0,180,216,0.16);
+}
+
 .note {
   font-size: 0.72rem;
   color: rgba(255,255,255,0.35);

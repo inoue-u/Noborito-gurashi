@@ -2,6 +2,17 @@
   background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(15, 52, 96, 0.3));
 }
 
+.syncDot {
+  font-size: 0.5rem;
+  color: var(--penguin-teal);
+  animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
 .penguinMsg {
   display: flex;
   align-items: center;

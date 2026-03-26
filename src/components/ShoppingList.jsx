@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import styles from './ShoppingList.module.css'
-
-const STORAGE_KEY = 'noborito-shopping'
+import { useSharedList } from '../hooks/useSharedList'
+import HouseholdBadge from './HouseholdBadge'
 
 const CATEGORIES = [
   { id: 'food', label: '食品', icon: '🍱' },
@@ -12,69 +12,28 @@ const CATEGORIES = [
 
 const PENGUIN_ENCOURAGEMENT = [
   'かしこいお買い物だペン！',
-  'おつかれさまペン！',
-  'リストが空だよ，出発できるペン？',
+  'リストが空だよ，何か追加するペン？',
   'ペタペタ歩いてお買い物ペン！',
-  'ナイスショッピングだペン！',
 ]
 
-function loadItems() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveItems(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-}
-
-export default function ShoppingList() {
-  const [items, setItems] = useState(loadItems)
+export default function ShoppingList({ householdId, onLeaveHousehold }) {
+  const { items, syncing, isOnline, addItem, updateItem, removeItem, clearDone } = useSharedList(householdId, 'shopping')
   const [inputText, setInputText] = useState('')
   const [inputCategory, setInputCategory] = useState('food')
   const [filter, setFilter] = useState('all')
   const [showDone, setShowDone] = useState(true)
-  const [penguinMsg] = useState(() =>
-    PENGUIN_ENCOURAGEMENT[Math.floor(Math.random() * PENGUIN_ENCOURAGEMENT.length)]
-  )
   const inputRef = useRef(null)
 
-  useEffect(() => { saveItems(items) }, [items])
-
-  function addItem() {
+  async function handleAdd() {
     const text = inputText.trim()
     if (!text) return
-    const newItem = {
-      id: Date.now(),
-      text,
-      category: inputCategory,
-      done: false,
-      addedAt: new Date().toISOString(),
-    }
-    setItems(prev => [newItem, ...prev])
+    await addItem({ text, category: inputCategory, done: false })
     setInputText('')
     inputRef.current?.focus()
   }
 
-  function toggleItem(id) {
-    setItems(prev => prev.map(item =>
-      item.id === id ? { ...item, done: !item.done } : item
-    ))
-  }
-
-  function deleteItem(id) {
-    setItems(prev => prev.filter(item => item.id !== id))
-  }
-
-  function clearDone() {
-    setItems(prev => prev.filter(item => !item.done))
-  }
-
   function handleKeyDown(e) {
-    if (e.key === 'Enter') addItem()
+    if (e.key === 'Enter') handleAdd()
   }
 
   const filtered = items.filter(item => {
@@ -91,13 +50,16 @@ export default function ShoppingList() {
     <div className={`card ${styles.shoppingCard}`}>
       <div className="section-title">
         🛒 買い物リスト
+        {syncing && <span className={styles.syncDot}>●</span>}
       </div>
+
+      <HouseholdBadge householdId={householdId} onLeave={onLeaveHousehold} />
 
       {/* ペンギンメッセージ */}
       {totalCount === 0 && (
         <div className={styles.penguinMsg}>
           <span className={styles.penguinEmoji}>🐧</span>
-          <span>{penguinMsg}</span>
+          <span>{PENGUIN_ENCOURAGEMENT[0]}</span>
         </div>
       )}
 
@@ -109,15 +71,10 @@ export default function ShoppingList() {
             <span>{progressPct}%</span>
           </div>
           <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPct}%` }}
-            />
+            <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
           </div>
           {progressPct === 100 && (
-            <div className={styles.allDone}>
-              🎉 全部そろったペン！ 🐧
-            </div>
+            <div className={styles.allDone}>🎉 全部そろったペン！ 🐧</div>
           )}
         </div>
       )}
@@ -130,9 +87,7 @@ export default function ShoppingList() {
           onChange={e => setInputCategory(e.target.value)}
         >
           {CATEGORIES.map(cat => (
-            <option key={cat.id} value={cat.id}>
-              {cat.icon}
-            </option>
+            <option key={cat.id} value={cat.id}>{cat.icon}</option>
           ))}
         </select>
         <input
@@ -144,7 +99,7 @@ export default function ShoppingList() {
           onChange={e => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        <button className={`btn-primary ${styles.addBtn}`} onClick={addItem}>
+        <button className={`btn-primary ${styles.addBtn}`} onClick={handleAdd}>
           追加
         </button>
       </div>
@@ -188,16 +143,13 @@ export default function ShoppingList() {
             >
               <button
                 className={`${styles.checkBtn} ${item.done ? styles.checked : ''}`}
-                onClick={() => toggleItem(item.id)}
+                onClick={() => updateItem(item.id, { done: !item.done })}
               >
                 {item.done ? '✓' : ''}
               </button>
               <span className={styles.catIcon}>{cat?.icon}</span>
               <span className={styles.itemText}>{item.text}</span>
-              <button
-                className={styles.deleteBtn}
-                onClick={() => deleteItem(item.id)}
-              >
+              <button className={styles.deleteBtn} onClick={() => removeItem(item.id)}>
                 ✕
               </button>
             </div>
@@ -205,7 +157,6 @@ export default function ShoppingList() {
         })}
       </div>
 
-      {/* フッターアクション */}
       {doneCount > 0 && (
         <div className={styles.footer}>
           <button className="btn-danger" onClick={clearDone}>
