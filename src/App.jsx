@@ -34,28 +34,27 @@ const WEATHER_LABELS = {
   95: '雷雨', 96: '雷雨(雹)', 99: '雷雨(雹)',
 }
 
-// --- Garbage Collection Logic ---
+// --- Garbage Collection Logic (多摩区登戸) ---
 function getGarbageInfo(date) {
-  const day = date.getDay() // 0=Sun, 1=Mon...
+  const day = date.getDay()
   const weekOfMonth = Math.ceil(date.getDate() / 7)
 
   switch (day) {
-    case 1: // Monday
-    case 4: // Thursday
-      return { type: '普通ゴミ', color: 'bg-green-500', icon: '🗑️' }
-    case 3: // Wednesday
-      return { type: '資源ゴミ', color: 'bg-blue-500', icon: '♻️' }
-    case 5: // Friday
-      return { type: 'プラスチック', color: 'bg-yellow-500', icon: '🧴' }
-    case 6: // Saturday
-      return { type: '空き缶・ペット', color: 'bg-red-400', icon: '🥫' }
-    case 2: // Tuesday
+    case 1: case 4:
+      return { type: '普通ゴミ', color: '#22C55E', icon: '🗑️' }
+    case 3:
+      return { type: '資源ゴミ', color: '#3B82F6', icon: '♻️' }
+    case 5:
+      return { type: 'プラスチック', color: '#EAB308', icon: '🧴' }
+    case 6:
+      return { type: '空き缶・ペット', color: '#F97316', icon: '🥫' }
+    case 2:
       if (weekOfMonth === 1 || weekOfMonth === 3) {
-        return { type: '小物金属', color: 'bg-gray-500', icon: '🔧' }
+        return { type: '小物金属', color: '#6B7280', icon: '🔧' }
       }
-      return { type: '収集なし', color: 'bg-snow-gray', icon: '—' }
+      return null
     default:
-      return { type: '収集なし', color: 'bg-snow-gray', icon: '—' }
+      return null
   }
 }
 
@@ -64,9 +63,7 @@ function getNextGarbageDay(fromDate) {
     const next = new Date(fromDate)
     next.setDate(next.getDate() + i)
     const info = getGarbageInfo(next)
-    if (info.type !== '収集なし') {
-      return { date: next, ...info }
-    }
+    if (info) return { date: next, ...info }
   }
   return null
 }
@@ -77,10 +74,20 @@ function formatDate(d) {
   return `${d.getMonth() + 1}/${d.getDate()}(${DAY_NAMES[d.getDay()]})`
 }
 
-// --- Penguin SVG Component ---
-function PenguinIcon({ className = '' }) {
+function getGreeting() {
+  const h = new Date().getHours()
+  if (h < 6) return 'おやすみ前かな？ 明日もいい日に。'
+  if (h < 10) return 'おはよう！ いい一日になりますように。'
+  if (h < 14) return 'お昼だね。ちょっと一息つこう。'
+  if (h < 18) return '午後もがんばろう！'
+  if (h < 21) return 'おつかれさま。ゆっくりしてね。'
+  return 'そろそろおやすみの時間だね。'
+}
+
+// --- Penguin SVG (small accent) ---
+function PenguinIcon({ size = 20 }) {
   return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle' }}>
       <ellipse cx="32" cy="36" rx="18" ry="22" fill="#0C2D48" />
       <ellipse cx="32" cy="38" rx="12" ry="16" fill="#F2F7FA" />
       <circle cx="32" cy="16" r="12" fill="#0C2D48" />
@@ -95,36 +102,24 @@ function PenguinIcon({ className = '' }) {
   )
 }
 
-// --- Tabs ---
-const TABS = [
-  { id: 'home', label: 'ホーム', icon: '🏠' },
-  { id: 'memo', label: 'メモ', icon: '📝' },
-  { id: 'traffic', label: '交通', icon: '🚃' },
-]
-
-// --- Main App ---
+// --- Main App (Single Page Dashboard) ---
 function App() {
-  const [tab, setTab] = useState('home')
   const [weather, setWeather] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [memos, setMemos] = useState([])
   const [memoText, setMemoText] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [showMemoPanel, setShowMemoPanel] = useState(false)
   const memoEndRef = useRef(null)
 
-  // Fetch weather
   useEffect(() => {
     fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${NOBORITO_LAT}&longitude=${NOBORITO_LON}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia/Tokyo&forecast_days=3`
     )
       .then((r) => r.json())
-      .then((data) => {
-        setWeather(data)
-        setLoading(false)
-      })
+      .then((data) => { setWeather(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
-  // Firestore memos listener
   useEffect(() => {
     if (!hasConfig || !db) return
     const q = query(
@@ -132,13 +127,11 @@ function App() {
       orderBy('createdAt', 'asc'),
       limit(50)
     )
-    const unsub = onSnapshot(q, (snap) => {
+    return onSnapshot(q, (snap) => {
       setMemos(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
     })
-    return unsub
   }, [])
 
-  // Auto-scroll memos
   useEffect(() => {
     memoEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [memos])
@@ -159,327 +152,234 @@ function App() {
   const now = new Date()
   const todayGarbage = getGarbageInfo(now)
   const nextGarbage = getNextGarbageDay(now)
-
-  return (
-    <div className="min-h-dvh bg-arctic-white flex flex-col pb-24">
-      {/* Header */}
-      <header className="bg-deep-blue text-white px-5 pt-3 pb-4">
-        <div className="flex items-center gap-2">
-          <PenguinIcon className="w-8 h-8" />
-          <div>
-            <h1 className="text-lg font-bold leading-tight">登戸つむぎ</h1>
-            <p className="text-[10px] text-ice-blue opacity-80">ペンギン・エディション</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Content Area */}
-      <main className="flex-1 overflow-y-auto px-4 pt-4">
-        {tab === 'home' && (
-          <HomeTab
-            weather={weather}
-            loading={loading}
-            todayGarbage={todayGarbage}
-            nextGarbage={nextGarbage}
-            now={now}
-          />
-        )}
-        {tab === 'memo' && (
-          <MemoTab
-            memos={memos}
-            memoText={memoText}
-            setMemoText={setMemoText}
-            sendMemo={sendMemo}
-            memoEndRef={memoEndRef}
-          />
-        )}
-        {tab === 'traffic' && <TrafficTab />}
-      </main>
-
-      {/* Tab Bar - Glassmorphism */}
-      <nav className="fixed bottom-0 left-0 right-0 backdrop-blur-xl bg-white/70 border-t border-snow-gray/50 pb-[max(env(safe-area-inset-bottom),8px)]">
-        <div className="flex justify-around max-w-md mx-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex flex-col items-center py-2 px-4 text-xs transition-colors ${
-                tab === t.id
-                  ? 'text-deep-blue font-bold'
-                  : 'text-gray-400'
-              }`}
-            >
-              <span className="text-xl">{t.icon}</span>
-              <span className="mt-0.5">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-    </div>
-  )
-}
-
-// --- Home Tab ---
-function HomeTab({ weather, loading, todayGarbage, nextGarbage, now }) {
-  const currentWeather = weather?.current
+  const current = weather?.current
   const daily = weather?.daily
 
   return (
-    <div className="space-y-4">
-      {/* Weather Card */}
-      <div className="bg-white rounded-2xl shadow-sm p-5 border border-snow-gray/50">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold text-deep-blue">登戸の天気</h2>
-          <span className="text-[10px] text-gray-400">{formatDate(now)}</span>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center h-20">
-            <div className="animate-spin w-6 h-6 border-2 border-deep-blue border-t-transparent rounded-full" />
+    <div className="min-h-dvh bg-arctic-white">
+      {/* ===== Header ===== */}
+      <header className="bg-gradient-to-br from-deep-blue to-deep-blue-light text-white px-5 pt-4 pb-5">
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center gap-1.5 mb-3">
+            <PenguinIcon size={18} />
+            <span className="text-xs font-medium tracking-wide opacity-70">登戸つむぎ</span>
           </div>
-        ) : currentWeather ? (
-          <>
-            <div className="flex items-center gap-4">
-              <span className="text-5xl">
-                {WEATHER_ICONS[currentWeather.weather_code] || '🌡'}
-              </span>
-              <div>
-                <p className="text-3xl font-bold text-deep-blue">
-                  {Math.round(currentWeather.temperature_2m)}°C
-                </p>
-                <p className="text-sm text-gray-500">
-                  {WEATHER_LABELS[currentWeather.weather_code] || '不明'}
-                </p>
+
+          {/* Weather hero inside header */}
+          {loading ? (
+            <div className="flex items-center gap-3 h-16">
+              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+              <span className="text-sm opacity-60">天気を取得中...</span>
+            </div>
+          ) : current ? (
+            <div className="flex items-end justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl leading-none">{WEATHER_ICONS[current.weather_code] || '🌡'}</span>
+                <div>
+                  <p className="text-3xl font-light leading-none tracking-tight">
+                    {Math.round(current.temperature_2m)}<span className="text-lg">°C</span>
+                  </p>
+                  <p className="text-xs opacity-60 mt-0.5">
+                    {WEATHER_LABELS[current.weather_code] || '—'} ・ 湿度{current.relative_humidity_2m}%
+                  </p>
+                </div>
               </div>
-              <div className="ml-auto text-right text-xs text-gray-400 space-y-1">
-                <p>湿度 {currentWeather.relative_humidity_2m}%</p>
-                <p>風速 {currentWeather.wind_speed_10m}km/h</p>
+              <div className="text-right">
+                <p className="text-[11px] opacity-50">{formatDate(now)}</p>
+                <p className="text-[11px] opacity-50">風速 {current.wind_speed_10m}km/h</p>
               </div>
             </div>
-            {/* 3-day forecast */}
-            {daily && (
-              <div className="mt-4 pt-3 border-t border-snow-gray/50 grid grid-cols-3 gap-2 text-center">
-                {daily.time.map((day, i) => {
-                  const d = new Date(day + 'T00:00:00')
-                  return (
-                    <div key={day} className="text-xs">
-                      <p className="text-gray-400">
-                        {i === 0 ? '今日' : formatDate(d)}
-                      </p>
-                      <p className="text-2xl my-1">
-                        {WEATHER_ICONS[daily.weather_code[i]] || '🌡'}
-                      </p>
-                      <p className="text-deep-blue font-medium">
-                        <span className="text-red-400">
-                          {Math.round(daily.temperature_2m_max[i])}°
-                        </span>
-                        {' / '}
-                        <span className="text-blue-400">
-                          {Math.round(daily.temperature_2m_min[i])}°
-                        </span>
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-gray-400">天気情報を取得できませんでした</p>
-        )}
-      </div>
+          ) : (
+            <p className="text-sm opacity-50">天気情報を取得できませんでした</p>
+          )}
 
-      {/* Garbage Card */}
-      <div className="bg-white rounded-2xl shadow-sm p-5 border border-snow-gray/50">
-        <h2 className="text-sm font-bold text-deep-blue mb-3">ゴミ出し情報</h2>
-        <div className="flex items-center gap-4">
-          <div
-            className={`w-14 h-14 rounded-xl ${todayGarbage.color} flex items-center justify-center text-2xl text-white`}
-          >
-            {todayGarbage.icon}
-          </div>
-          <div>
-            <p className="text-xs text-gray-400">今日のゴミ</p>
-            <p className="text-lg font-bold text-deep-blue">
-              {todayGarbage.type}
-            </p>
-          </div>
-        </div>
-        {nextGarbage && (
-          <div className="mt-3 pt-3 border-t border-snow-gray/50 flex items-center gap-3">
-            <div
-              className={`w-8 h-8 rounded-lg ${nextGarbage.color} flex items-center justify-center text-sm text-white`}
-            >
-              {nextGarbage.icon}
+          {/* 3-day mini forecast */}
+          {daily && (
+            <div className="flex gap-2 mt-4">
+              {daily.time.map((day, i) => {
+                const d = new Date(day + 'T00:00:00')
+                return (
+                  <div key={day} className="flex-1 text-center bg-white/10 rounded-xl py-2 px-1">
+                    <p className="text-[10px] opacity-60">{i === 0 ? '今日' : DAY_NAMES[d.getDay()]}</p>
+                    <p className="text-lg leading-none my-0.5">{WEATHER_ICONS[daily.weather_code[i]] || '🌡'}</p>
+                    <p className="text-[10px]">
+                      <span className="text-orange-200">{Math.round(daily.temperature_2m_max[i])}°</span>
+                      <span className="opacity-40"> / </span>
+                      <span className="text-blue-200">{Math.round(daily.temperature_2m_min[i])}°</span>
+                    </p>
+                  </div>
+                )
+              })}
             </div>
-            <div className="text-xs">
-              <span className="text-gray-400">次回: </span>
-              <span className="text-deep-blue font-medium">
-                {formatDate(nextGarbage.date)} — {nextGarbage.type}
-              </span>
+          )}
+        </div>
+      </header>
+
+      {/* ===== Dashboard Body ===== */}
+      <main className="max-w-lg mx-auto px-4 -mt-3 pb-8 space-y-3">
+
+        {/* --- Garbage Card --- */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden card-hover">
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              {todayGarbage ? (
+                <>
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
+                    style={{ backgroundColor: todayGarbage.color + '18' }}
+                  >
+                    {todayGarbage.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">今日のゴミ出し</p>
+                    <p className="text-base font-bold text-deep-blue leading-snug">{todayGarbage.type}</p>
+                  </div>
+                  <div
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: todayGarbage.color }}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-lg shrink-0">
+                    —
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider">今日のゴミ出し</p>
+                    <p className="text-base font-medium text-gray-300">収集なし</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Penguin greeting */}
-      <div className="flex items-end gap-3 px-2">
-        <PenguinIcon className="w-12 h-12 shrink-0" />
-        <div className="bg-white rounded-2xl rounded-bl-sm shadow-sm p-3 border border-snow-gray/50 text-sm text-deep-blue">
-          {getGreeting()}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 6) return 'こんな時間まで起きてるの？ 早く寝ないとペンギンに怒られるよ。'
-  if (h < 10) return 'おはよう！ 今日も登戸から素敵な一日を始めよう。'
-  if (h < 12) return 'そろそろお昼だね。登戸の美味しいお店に行く？'
-  if (h < 15) return 'お昼過ぎだね。午後もがんばろう！'
-  if (h < 18) return 'そろそろ夕方だね。帰り道、気をつけてね。'
-  if (h < 21) return 'お疲れさま！ ゆっくり休んでね。'
-  return 'もうこんな時間。今日もお疲れさま。おやすみなさい。'
-}
-
-// --- Memo Tab ---
-function MemoTab({ memos, memoText, setMemoText, sendMemo, memoEndRef }) {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMemo()
-    }
-  }
-
-  return (
-    <div className="flex flex-col h-[calc(100dvh-140px)]">
-      <h2 className="text-sm font-bold text-deep-blue mb-3">共有メモ</h2>
-
-      {!hasConfig && (
-        <div className="bg-beak-orange/10 border border-beak-orange/30 rounded-xl p-4 mb-3 text-xs text-deep-blue">
-          <p className="font-bold mb-1">Firebase未設定</p>
-          <p>
-            .env に VITE_FIREBASE_* を設定するとリアルタイム共有メモが使えます。
-          </p>
-        </div>
-      )}
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-2 mb-3">
-        {memos.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm">
-            <PenguinIcon className="w-16 h-16 opacity-30 mb-2" />
-            <p>まだメモがありません</p>
-          </div>
-        )}
-        {memos.map((m) => (
-          <div
-            key={m.id}
-            className={`max-w-[80%] rounded-2xl p-3 text-sm ${
-              m.author === auth?.currentUser?.uid
-                ? 'ml-auto bg-deep-blue text-white rounded-br-sm'
-                : 'mr-auto bg-white text-deep-blue border border-snow-gray/50 rounded-bl-sm'
-            }`}
-          >
-            <p className="whitespace-pre-wrap break-words">{m.content}</p>
-            {m.createdAt && (
-              <p className="text-[10px] opacity-50 mt-1">
-                {new Date(m.createdAt.seconds * 1000).toLocaleString('ja-JP', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+          {nextGarbage && (
+            <div className="border-t border-gray-50 px-4 py-2.5 flex items-center gap-2 bg-gray-50/50">
+              <span className="text-sm">{nextGarbage.icon}</span>
+              <p className="text-[11px] text-gray-500">
+                次回 <span className="font-medium text-deep-blue">{formatDate(nextGarbage.date)}</span> {nextGarbage.type}
               </p>
-            )}
-          </div>
-        ))}
-        <div ref={memoEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="flex gap-2 items-end">
-        <textarea
-          value={memoText}
-          onChange={(e) => setMemoText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="メモを入力..."
-          rows={1}
-          className="flex-1 resize-none rounded-xl border border-snow-gray bg-white px-4 py-3 text-sm text-deep-blue placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-beak-orange/50 focus:border-beak-orange"
-        />
-        <button
-          onClick={sendMemo}
-          disabled={!memoText.trim()}
-          className="bg-deep-blue text-white rounded-xl px-4 py-3 text-sm font-bold disabled:opacity-40 active:scale-95 transition-transform"
-        >
-          送信
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// --- Traffic Tab ---
-function TrafficTab() {
-  const trainLinks = [
-    {
-      name: '小田急線',
-      sub: '新宿・小田原方面',
-      icon: '🔵',
-      url: 'https://www.odakyu.jp/cgi-bin/user/emg/emergency_bbs.pl',
-    },
-    {
-      name: 'JR南武線',
-      sub: '川崎・立川方面',
-      icon: '🟡',
-      url: 'https://traininfo.jreast.co.jp/train_info/kanto.aspx',
-    },
-  ]
-
-  return (
-    <div className="space-y-4">
-      <h2 className="text-sm font-bold text-deep-blue">交通情報</h2>
-
-      {trainLinks.map((link) => (
-        <a
-          key={link.name}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block bg-white rounded-2xl shadow-sm p-4 border border-snow-gray/50 active:scale-[0.98] transition-transform"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{link.icon}</span>
-            <div>
-              <p className="text-base font-bold text-deep-blue">{link.name}</p>
-              <p className="text-xs text-gray-400">{link.sub}</p>
             </div>
-            <span className="ml-auto text-gray-300 text-xl">›</span>
-          </div>
-        </a>
-      ))}
-
-      <div className="bg-white rounded-2xl shadow-sm p-4 border border-snow-gray/50">
-        <h3 className="text-sm font-bold text-deep-blue mb-2">登戸駅 路線一覧</h3>
-        <ul className="text-sm space-y-2 text-gray-600">
-          <li className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-blue-600 inline-block" />
-            小田急小田原線（各停・急行・快速急行）
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block" />
-            JR南武線（各駅停車・快速）
-          </li>
-        </ul>
-      </div>
-
-      <div className="flex items-end gap-3 px-2 mt-4">
-        <PenguinIcon className="w-10 h-10 shrink-0" />
-        <div className="bg-white rounded-2xl rounded-bl-sm shadow-sm p-3 border border-snow-gray/50 text-xs text-deep-blue">
-          運行情報は各公式サイトで確認してね。遅延の時は早めに出発しよう！
+          )}
         </div>
-      </div>
+
+        {/* --- Quick Actions Grid --- */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Train Links */}
+          <a
+            href="https://www.odakyu.jp/cgi-bin/user/emg/emergency_bbs.pl"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover block"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center text-xs">🔵</span>
+              <span className="text-xs font-bold text-deep-blue">小田急線</span>
+            </div>
+            <p className="text-[10px] text-gray-400">運行情報を確認</p>
+          </a>
+          <a
+            href="https://traininfo.jreast.co.jp/train_info/kanto.aspx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 card-hover block"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-6 h-6 rounded-md bg-yellow-50 flex items-center justify-center text-xs">🟡</span>
+              <span className="text-xs font-bold text-deep-blue">南武線</span>
+            </div>
+            <p className="text-[10px] text-gray-400">運行情報を確認</p>
+          </a>
+        </div>
+
+        {/* --- Shared Memo Card --- */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <button
+            onClick={() => setShowMemoPanel(!showMemoPanel)}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-md bg-deep-blue/5 flex items-center justify-center text-xs">📝</span>
+              <span className="text-xs font-bold text-deep-blue">共有メモ</span>
+              {memos.length > 0 && (
+                <span className="bg-beak-orange text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {memos.length}
+                </span>
+              )}
+            </div>
+            <svg
+              className={`w-4 h-4 text-gray-300 transition-transform ${showMemoPanel ? 'rotate-180' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showMemoPanel && (
+            <div className="border-t border-gray-50">
+              {!hasConfig && (
+                <div className="mx-4 mt-3 bg-beak-orange/8 border border-beak-orange/20 rounded-lg p-3 text-[11px] text-deep-blue/70">
+                  .env に VITE_FIREBASE_* を設定するとリアルタイム同期が有効になります。
+                </div>
+              )}
+
+              {/* Messages */}
+              <div className="max-h-64 overflow-y-auto px-4 py-3 space-y-2">
+                {memos.length === 0 && (
+                  <div className="text-center py-6 text-gray-300 text-xs">
+                    <PenguinIcon size={24} />
+                    <p className="mt-1">まだメモがありません</p>
+                  </div>
+                )}
+                {memos.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed ${
+                      m.author === auth?.currentUser?.uid
+                        ? 'ml-auto bg-deep-blue text-white rounded-br-sm'
+                        : 'mr-auto bg-gray-50 text-deep-blue rounded-bl-sm'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                    {m.createdAt && (
+                      <p className="text-[9px] opacity-40 mt-1">
+                        {new Date(m.createdAt.seconds * 1000).toLocaleString('ja-JP', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                        })}
+                      </p>
+                    )}
+                  </div>
+                ))}
+                <div ref={memoEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="px-4 pb-3 flex gap-2 items-end">
+                <input
+                  type="text"
+                  value={memoText}
+                  onChange={(e) => setMemoText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') sendMemo() }}
+                  placeholder="メモを入力..."
+                  className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-[13px] text-deep-blue placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-beak-orange/30 focus:border-beak-orange/50 transition-shadow"
+                />
+                <button
+                  onClick={sendMemo}
+                  disabled={!memoText.trim()}
+                  className="bg-deep-blue text-white rounded-xl px-3.5 py-2 text-[13px] font-medium disabled:opacity-30 active:scale-95 transition-all hover:bg-deep-blue-light"
+                >
+                  送信
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* --- Greeting Footer --- */}
+        <div className="flex items-center gap-2 px-1 pt-1">
+          <PenguinIcon size={16} />
+          <p className="text-[11px] text-gray-400 italic">{getGreeting()}</p>
+        </div>
+      </main>
     </div>
   )
 }

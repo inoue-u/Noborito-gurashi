@@ -3,17 +3,19 @@
 @theme {
   --color-deep-blue: #0C2D48;
   --color-deep-blue-light: #1A4A6E;
-  --color-arctic-white: #F2F7FA;
+  --color-arctic-white: #F5F7FA;
   --color-beak-orange: #FDBA74;
   --color-beak-orange-dark: #F59E0B;
   --color-ice-blue: #B8D8E8;
   --color-snow-gray: #E2E8F0;
+  --color-warm-white: #FAFBFC;
 }
 
 html {
   font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-  background-color: #F2F7FA;
+  background-color: #F5F7FA;
   color: #0C2D48;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -23,3 +25,11 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   min-height: 100dvh;
 }
+
+/* Smooth scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+/* Card hover lift */
+.card-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.card-hover:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(12,45,72,0.08); }
