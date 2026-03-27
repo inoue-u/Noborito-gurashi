@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-deep-blue: #0C2D48;
+  --color-deep-blue-light: #1A4A6E;
+  --color-arctic-white: #F2F7FA;
+  --color-beak-orange: #FDBA74;
+  --color-beak-orange-dark: #F59E0B;
+  --color-ice-blue: #B8D8E8;
+  --color-snow-gray: #E2E8F0;
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  background-color: #F2F7FA;
+  color: #0C2D48;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100dvh;
+}
